@@ -264,6 +264,7 @@ fi
 cd ..
 
 # GoAccess to Run Report
+echo-notice "Building Report with GoAccess
 eval docker run -it --rm -e TZ=${TZ:-"America/Los_Angeles"} \
   -v $(PWD):/mnt/logs \
   -v '${GOACCESS_CONFIG_FILE}:/root/.goaccessrc' \
@@ -276,7 +277,10 @@ eval docker run -it --rm -e TZ=${TZ:-"America/Los_Angeles"} \
   $GOACCESS_EXTRA_ARGS
 
 # Report the file is done
-echo-green "Report Created: ${REPORT_PATH}/${REPORT_FILE}"
+echo -en "${green_bg} Report Created: ${NC} "
+echo -e "${DATA_LOCATION}/${REPORT_PATH}/${REPORT_FILE}"
 
-# Open for MacOS
-open $REPORT_FILE
+if [[ "$(uname -s)" == "Darwin" ]]; then
+  # Open for MacOS
+  open $REPORT_FILE
+fi

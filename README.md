@@ -37,3 +37,4 @@ REPORT_FILE | X | [[ SITE_UUID ]]-[[ SITE_ENV ]]-[[ DATE/TIME ]].html | Name of 
 SSH_KEY |  |  | SSH Key to use for connection.
 SSH_OPTIONS | | ssh -p 2222 -o StrictHostKeyChecking=no | SSH Options to use for rsync connection. When SSH_KEY is present does not utilize config file
 GOACCESS_CONFIG_FILE | | ~/.goaccessrc | GoAccess Location File. If not found one is downloaded from the GoAccess Repo
+TZ | | America/Los_Angeles | Timezone to use for building report
