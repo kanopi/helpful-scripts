@@ -1,5 +1,34 @@
 #!/bin/bash
 
+set -e
+
+RSYNC_FLAG="--quiet"
+GZ_FLAG="--quiet"
+
+if [[ "${DEBUG}" == "1" ]]; then
+  set -ex
+  CP_FLAG="-v"
+  RSYNC_FLAG=""
+  GZ_FLAG=""
+fi
+
+#### VARIABLES
+# Console colors
+green='\033[0;32;49m'
+green_bg='\033[0;42;30m'
+yellow='\033[0;33;49m'
+yellow_bold='\033[1;33;49m'
+yellow_bg='\033[0;43;30m'
+red='\033[0;91;49m'
+red_bg='\033[0;101;30m'
+blue='\033[0;34;49m'
+lime='\033[0;92;49m'
+acqua='\033[0;96;49m'
+magenta='\033[0;35;49m'
+lightmagenta='\033[0;95;49m'
+lightmagenta_bg='\033[0;105;30m'
+NC='\033[0m'
+
 # Prestore all varibles within an env file.
 # If found load that file.
 ENV_FILE=${ENV_FILE:-$HOME/.collectlogs}
@@ -40,9 +69,59 @@ REPORT_FILE=${REPORT_DIRECTORY}/${REPORT_FILE:-"${SITE_UUID}-${SITE_ENV}-${DATE_
 # Helper functions 
 #####
 
-# Output a message to the console
-send_message () {
-  echo $1
+echo-red ()      { echo -e "${red}$1${NC}"; }
+echo-green ()    { echo -e "${green}$1${NC}"; }
+echo-green-bg () { echo -e "${green_bg}$1${NC}"; }
+echo-yellow ()   { echo -e "${yellow}$1${NC}"; }
+
+echo-warning() {
+	echo -e "${yellow_bg} WARNING: ${NC} ${yellow}$1${NC}";
+	shift
+	for arg in "$@"; do
+		echo -e "           $arg"
+	done
+}
+
+echo-error() {
+	echo -e "${red_bg} ERROR: ${NC} ${red}$1${NC}"
+	shift
+	for arg in "$@"; do
+		echo -e "         $arg"
+	done
+}
+
+echo-notice() {
+	echo -e "${lightmagenta_bg} NOTICE: ${NC} ${lightmagenta}$1${NC}"
+	shift
+	for arg in "$@"; do
+		echo -e "         $arg"
+	done
+}
+
+# print string in $1 for $2 times
+echo-repeat() {
+    seq  -f $1 -s '' $2; echo
+}
+
+# prints message to stderr
+echo-stderr() {
+	(>&2 echo "$@")
+}
+
+# Exits fin if previous command exited with non-zero code
+if_failed() {
+	if [ ! $? -eq 0 ]; then
+		echo-red "$*"
+		exit 1
+	fi
+}
+
+# Like if_failed but with more strict error
+if_failed_error() {
+	if [ ! $? -eq 0 ]; then
+		echo-error "$@"
+		exit 1
+	fi
 }
 
 # Local function 
@@ -65,26 +144,17 @@ CLEANUP_AGGREGATE_DIR=false
 CLEANUP_LOGS=true
 
 if [[ "${SITE_UUID}" == ""  ]] || [[ "${SITE_ENV}" == "" ]]; then
-  echo "SITE_UUID and SITE_ENV are required variables."
+  echo-error "SITE_UUID and SITE_ENV are required variables."
   exit 1
 fi 
 
 check_if_exists_create $BASEDIR
 
-if [[ "${DEBUG}" == "1" ]]; then
-  set -ex
-  CP_FLAG="-v"
-else
-  set -e
-  RSYNC_FLAG="--quiet"
-  GZ_FLAG="--quiet"
-fi
-
 if [[ "${DOWNLOAD_GEOIP}" == "1" ]]; then
   if [[ "${GEOIP_KEY}" == "" ]]; then
-    send_message "GEOIP_KEY required in order to update GeoIP"
+    echo-error "GEOIP_KEY required in order to update GeoIP"
   else
-    send_message "Downloading latest GeoLite2 Database from MaxMind"
+    echo-notice "Downloading latest GeoLite2 Database from MaxMind"
     cd /tmp/
     curl -fsSL -o geoip.tar.gz "https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-City&license_key=${GEOIP_KEY}&suffix=tar.gz"
     tar -xf geoip.tar.gz
@@ -141,7 +211,7 @@ check_if_exists_create ${REPORT_DIRECTORY}
 cd ${LOG_DIRECTORY}
 
 if [ $COLLECT_LOGS == true ]; then
-  send_message 'COLLECT_LOGS set to $COLLECT_LOGS. Beginning the process...'
+  echo-warning 'COLLECT_LOGS set to $COLLECT_LOGS. Beginning the process...'
   # Download all logs from appservers.
   for app_server in $(dig @8.8.8.8 +short -4 appserver.$SITE_ENV.$SITE_UUID.drush.in); do
     eval rsync -rlz $RSYNC_FLAG --size-only --ipv4 --progress ${SSH_OPTIONS} "$SITE_ENV.$SITE_UUID@$app_server:logs" "app_server_$app_server"
@@ -152,11 +222,11 @@ if [ $COLLECT_LOGS == true ]; then
     eval rsync -rlz $RSYNC_FLAG --size-only --ipv4 --progress $SSH_OPTIONS "$SITE_ENV.$SITE_UUID@$db_server:logs" "db_server_$db_server"
   done
 else
-  send_message 'skipping the collection of logs..'
+  echo-notice 'skipping the collection of logs..'
 fi
 
 if [ $AGGREGATE_NGINX == true ]; then
-  send_message 'AGGREGATE_NGINX set to $AGGREGATE_NGINX. Starting the process of combining nginx-access logs...'
+  echo-notice 'AGGREGATE_NGINX set to $AGGREGATE_NGINX. Starting the process of combining nginx-access logs...'
   check_if_exists_create aggregate-logs
 
   for d in $(ls -d app*/logs/nginx); do
@@ -171,23 +241,23 @@ if [ $AGGREGATE_NGINX == true ]; then
     done
   done
 
-  send_message "unzipping nginx-access logs in aggregate-logs directory..."
+  echo-notice "unzipping nginx-access logs in aggregate-logs directory..."
   for f in $(ls -f aggregate-logs); do
     if [[ $f =~ \.gz ]]; then
       eval gunzip $GZ_FLAG -f aggregate-logs/"$f"
     fi
   done
-  send_message "combining all nginx access logs..."
+  echo-notice "combining all nginx access logs..."
   for f in $(find aggregate-logs -maxdepth 1 -not -type d -not -name "combined.logs"); do
     cat "$f" >> aggregate-logs/combined.logs
   done
-  send_message 'the combined logs file can be found in aggregate-logs/combined.logs'
+  echo-green 'the combined logs file can be found in aggregate-logs/combined.logs'
 else
-  send_message "AGGREGATE_NGINX set to $AGGREGATE_NGINX. So we're done."
+  echo-notice "AGGREGATE_NGINX set to $AGGREGATE_NGINX. So we're done."
 fi
 
 if [ $CLEANUP_AGGREGATE_DIR == true ]; then
-  send_message 'CLEANUP_AGGREGATE_DIR set to $CLEANUP_AGGREGATE_DIR. Cleaning up the aggregate-logs directory'
+  echo-notice 'CLEANUP_AGGREGATE_DIR set to $CLEANUP_AGGREGATE_DIR. Cleaning up the aggregate-logs directory'
   find ./aggregate-logs/ -name 'nginx-access*' -print -exec rm {} \;
 fi
 
@@ -206,7 +276,7 @@ eval docker run -it --rm -e TZ=${TZ:-"America/Los_Angeles"} \
   $GOACCESS_EXTRA_ARGS
 
 # Report the file is done
-send_message "Report Created: ${REPORT_PATH}/${REPORT_FILE}"
+echo-green "Report Created: ${REPORT_PATH}/${REPORT_FILE}"
 
 # Open for MacOS
 open $REPORT_FILE
