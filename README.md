@@ -24,7 +24,7 @@ The following variables can be used for prefixing the
 Variable | Required | Default | Details
 ---------|----------|---------|---------
 ENV_FILE | | [[HOME]]/.collectlogs | Environment file to store constant variables to
-DEBUG | | | Debug the script piece by piece
+DEBUG | | | Debug the script piece by piece. When set to 1 will output verbose logs from all items.
 SITE_UUID | X | | Pantheon Site UUID. This can be found in the URL to the dashboard
 SITE_ENV | | live | Environment to pull logs from
 GEOIP_KEY | | | Key from MaxMind to Download the GeoLite2 City database
