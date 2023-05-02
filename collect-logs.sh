@@ -264,7 +264,7 @@ fi
 cd ..
 
 # GoAccess to Run Report
-echo-notice "Building Report with GoAccess
+echo-notice "Building Report with GoAccess"
 eval docker run -it --rm -e TZ=${TZ:-"America/Los_Angeles"} \
   -v $(PWD):/mnt/logs \
   -v '${GOACCESS_CONFIG_FILE}:/root/.goaccessrc' \
