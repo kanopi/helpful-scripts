@@ -177,7 +177,7 @@ GOACCESS_CONFIG_FILE=${GOACCESS_CONFIG_FILE:-$HOME/.goaccessrc}
 # If the config file doesn't exist, download the template.
 if [[ ! -f "${GOACCESS_CONFIG_FILE}" ]]; then
   echo-notice "Downloading goaccess configuration file"
-  curl -fsSL -o $GOACCESS_CONFIG_FILE https://raw.githubusercontent.com/kanopi/helpful-scripts/goaccessrc.conf
+  curl -fsSL -o $GOACCESS_CONFIG_FILE https://raw.githubusercontent.com/kanopi/helpful-scripts/main/goaccessrc.conf
 fi
 
 GOACCESS_CONFIG_FILE=$(realpath ${GOACCESS_CONFIG_FILE})
