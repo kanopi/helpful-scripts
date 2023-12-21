@@ -180,7 +180,7 @@ if [[ ! -f "${GOACCESS_CONFIG_FILE}" ]]; then
   curl -fsSL -o $GOACCESS_CONFIG_FILE https://raw.githubusercontent.com/kanopi/helpful-scripts/goaccessrc.conf
 fi
 
-GOACCESS_CONFIG_FILE=$(realpath )
+GOACCESS_CONFIG_FILE=$(realpath ${GOACCESS_CONFIG_FILE})
 
 # If no SSH_OPTIONS are set, use default.
 if [[ "${SSH_OPTIONS}" == "" ]]; then
