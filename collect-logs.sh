@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 set -e
 
@@ -29,8 +29,8 @@ lightmagenta='\033[0;95;49m'
 lightmagenta_bg='\033[0;105;30m'
 NC='\033[0m'
 
-# Prestore all varibles within an env file.
-# If found load that file.
+# Prestore all variables within an env file.
+# If found, load that file.
 ENV_FILE=${ENV_FILE:-$HOME/.collectlogs}
 if [[ -f ${ENV_FILE} ]]; then
   . ${ENV_FILE}
@@ -152,7 +152,7 @@ check_if_exists_create $BASEDIR
 
 if [[ "${DOWNLOAD_GEOIP}" == "1" ]]; then
   if [[ "${GEOIP_KEY}" == "" ]]; then
-    echo-error "GEOIP_KEY required in order to update GeoIP"
+    echo-error "GEOIP_KEY required to update GeoIP"
   else
     echo-notice "Downloading latest GeoLite2 Database from MaxMind"
     cd /tmp/
@@ -171,13 +171,16 @@ if [[ -f ${GEOIP_FILE_LOCATION} ]]; then
   GEOIP_MOUNT="-v '${GEOIP_FILE_LOCATION}:/GeoIP.mmdb'"
 fi
 
-# Get Actual Location of GoAccessRC File
-GOACCESS_CONFIG_FILE=$(realpath ${GOACCESS_CONFIG_FILE:-$HOME/.goaccessrc})
+# Get the Actual Location of GoAccessRC File
+GOACCESS_CONFIG_FILE=${GOACCESS_CONFIG_FILE:-$HOME/.goaccessrc}
 
-# If Access File Downlaod Exist Download latest one.
+# If the config file doesn't exist, download the template.
 if [[ ! -f "${GOACCESS_CONFIG_FILE}" ]]; then
-  curl -fsSL -o $GOACCESS_CONFIG_FILE https://raw.githubusercontent.com/allinurl/goaccess/master/config/goaccess.conf
+  echo-notice "Downloading goaccess configuration file"
+  curl -fsSL -o $GOACCESS_CONFIG_FILE https://raw.githubusercontent.com/kanopi/helpful-scripts/goaccessrc.conf
 fi
+
+GOACCESS_CONFIG_FILE=$(realpath )
 
 # If no SSH_OPTIONS are set, use default.
 if [[ "${SSH_OPTIONS}" == "" ]]; then
@@ -190,7 +193,7 @@ else
   SSH_OPTIONS="-e \"${SSH_OPTIONS}\""
 fi
 
-# If location doesn't exist create it.
+# If location doesn't exist, create it.
 check_if_exists_create $DATA_LOCATION
 
 # Change to the Data Location Directory.
@@ -212,7 +215,7 @@ cd ${LOG_DIRECTORY}
 
 if [ $COLLECT_LOGS == true ]; then
   echo-warning 'COLLECT_LOGS set to $COLLECT_LOGS. Beginning the process...'
-  # Download all logs from appservers.
+  # Download all logs from app servers.
   for app_server in $(dig @8.8.8.8 +short -4 appserver.$SITE_ENV.$SITE_UUID.drush.in); do
     eval rsync -rlz $RSYNC_FLAG --size-only --ipv4 --progress ${SSH_OPTIONS} "$SITE_ENV.$SITE_UUID@$app_server:logs" "app_server_$app_server"
   done
