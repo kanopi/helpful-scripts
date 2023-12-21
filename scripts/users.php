@@ -3,6 +3,11 @@
 /**
  * The following script returns a CSV output of the users and their roles.
  * 
+ * This can be remotely downloaded using the following commands:
+ * 
+ * export SCRIPT="https://raw.githubusercontent.com/kanopi/helpful-scripts/main/scripts/users.php";
+ * drush php:eval "file_put_contents(\Drupal::service('file_system')->realpath("private://").'/'.basename('${SCRIPT}'), file_get_contents('${SCRIPT}'));"
+ * 
  * To run this in Drush put this in the private directory and usually the command will
  * execute like this.
  * 
