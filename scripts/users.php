@@ -45,6 +45,7 @@ $userStorage = \Drupal::entityTypeManager()->getStorage('user');
 
 $query = $userStorage->getQuery();
 $uids = $query
+	->accessCheck(TRUE)
 	->condition('uid', '0', '>')
 	->sort('access', 'DESC')
 	->execute();
