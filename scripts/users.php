@@ -22,6 +22,7 @@ $headers = [
 	"Email",
 	"Active",
 	"Roles",
+	"Blocked",
 	"Created",
 	"Last Active",
 ];
@@ -68,6 +69,7 @@ foreach ($users AS $user) {
 		$user->getEmail(),
 		$user->isActive() ? 'X' : '',
 		implode('; ', array_map(function($role) use ($roles) { return $roles[$role]['label']; }, $user->getRoles(true))),
+		$user->isBlocked() ? 'X' : '',
 		$user->getLastLoginTime() != 0 ? date('m/d/Y H:i:s', $user->getLastLoginTime()) : '',
 		$user->getLastAccessedTime() != 0 ? date('m/d/Y H:i:s', $user->getLastAccessedTime()) : ''
 	) . PHP_EOL;
